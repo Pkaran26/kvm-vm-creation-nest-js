@@ -245,14 +245,27 @@ sudo virt-install \\
         .split('\n')
         .map((line) => line.trim())
         .filter((line) => line !== '');
-      const vmInfo = {};
+      const vmInfo = {
+        Name: '',
+        Address: '',
+      };
       lines.forEach((line) => {
         const [key, value] = line.split(':').map((item) => item.trim());
         vmInfo[key] = value;
       });
+      const instanceAddr: { Address: string } = this.parseCMDResponse(
+        output2,
+      )[0] as { Address: string };
       return {
         status: true,
-        instanceDetail: { ...vmInfo, ...this.parseCMDResponse(output2)[0] },
+        instanceDetail: {
+          ...vmInfo,
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          instanceName: vmInfo.Name,
+          ...instanceAddr,
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          Address: instanceAddr.Address.split('/')[0],
+        },
       };
     } catch (error) {
       return {
