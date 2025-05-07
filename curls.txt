@@ -1,0 +1,9 @@
+curl -X POST http://localhost:3000/instance   -H "Content-Type: application/json"   -d '{
+    "instanceName": "ubuntu-pk-22",
+    "isoImageName": "ubuntu22",
+    "memory": 3072,
+    "vcpu": 2,
+    "diskSizeGB": 20,
+    "network": "myfreenetwork",    
+    "ssh": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIS0mmbs3DZBIiJRvxdOQYT0L44+IButThC+egyUBU/+ Indiqus"
+  }'
