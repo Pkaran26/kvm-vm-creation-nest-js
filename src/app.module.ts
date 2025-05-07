@@ -8,6 +8,7 @@ import { InstancePackModule } from './instance-pack/instance-pack.module';
 import { SubscriptionModule } from './subscription/subscription.module';
 import { ImageModule } from './image/image.module';
 import { NetworkModule } from './network/network.module';
+import { SshKeyModule } from './ssh-key/ssh-key.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { NetworkModule } from './network/network.module';
     SubscriptionModule,
     ImageModule,
     NetworkModule,
+    SshKeyModule,
   ],
   controllers: [AppController],
   providers: [AppService],
