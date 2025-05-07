@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { osDownloadMap } from 'src/os-mapping';
 import { readdir } from 'fs';
-// import { join } from 'path';
+import { join } from 'path';
 import { exec } from 'child_process';
 const ISO_DOWNLOAD_PATH = './vm_images';
 
@@ -55,43 +55,37 @@ export class ImageService {
     });
   }
 
-  // Function to download an ISO image using wget
-  // const downloadISO = async (url, filename) => {
-  //   console.log("url ", url);
+  async downloadFunc(url: string, filename: string) {
+    const outputPath = join(ISO_DOWNLOAD_PATH, filename);
+    const command = `wget -O "${outputPath}" "${url}"`;
+    console.log(`Downloading ${filename} from ${url} to ${outputPath}`);
+    try {
+      await this.executeCommand(command, 600000); // 5 minutes timeout
+      console.log(`Successfully downloaded ${filename}`);
+      return outputPath;
+    } catch (error) {
+      console.error(`Error downloading ${filename}: ${error}`);
+    }
+  }
 
-  //   const outputPath = join(ISO_DOWNLOAD_PATH, filename);
-  //   const command = `wget -O "${outputPath}" "${url}"`;
-  //   console.log("command ", command);
+  downloadImage(osName: string) {
+    if (!osDownloadMap[osName]) {
+      return {
+        status: false,
+        error: `Unsupported OS name: ${osName}. Available options: ${Object.keys(
+          osDownloadMap,
+        ).join(', ')}`,
+      };
+    }
 
-  //   console.log(`Downloading ${filename} from ${url} to ${outputPath}`);
-  //   try {
-  //     await this.executeCommand(command, 600000); // 5 minutes timeout
-  //     console.log(`Successfully downloaded ${filename}`);
-  //     return outputPath;
-  //   } catch (error) {
-  //     console.error(`Error downloading ${filename}: ${error}`);
-  //   }
-  // };
-
-  // // POST /api/download/:osName - Download ISO based on OS name parameter
-  // router.get("/api/download/:osName", async (req, res) => {
-  //   const osName = req.params.osName.toLowerCase(); // Convert to lowercase for case-insensitive matching
-
-  //   if (!osDownloadMap[osName]) {
-  //     return res.status(400).json({
-  //       error: `Unsupported OS name: ${osName}. Available options: ${Object.keys(
-  //         osDownloadMap
-  //       ).join(", ")}`,
-  //     });
-  //   }
-
-  //   const { url, filename } = osDownloadMap[osName];
-
-  //   downloadISO(url, filename).catch((error) => {
-  //     console.error("Download failed:", error);
-  //   });
-  //   res.json({
-  //     message: `${osName} ISO downloading started. It will appear on the list once downloaded`,
-  //   });
-  // });
+    const { url, filename } =
+      osDownloadMap[osName as keyof typeof osDownloadMap];
+    this.downloadFunc(url, filename).catch((error) => {
+      console.error('Download failed:', error);
+    });
+    return {
+      status: true,
+      message: `${osName} ISO downloading started. It will appear on the list once downloaded`,
+    };
+  }
 }
