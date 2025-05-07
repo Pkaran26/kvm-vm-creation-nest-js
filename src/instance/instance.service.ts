@@ -118,6 +118,7 @@ export class InstanceService {
   async deleteInstance(vmName: string) {
     try {
       await this.executeCommand(`virsh destroy ${vmName}`);
+      await this.executeCommand(`virsh undefine ${vmName}`);
       const VM_IMAGE_BASE_PATH = '/var/lib/libvirt/images';
       const imageName = `${vmName}.qcow2`;
       const diskPath = path.join(VM_IMAGE_BASE_PATH, imageName);
