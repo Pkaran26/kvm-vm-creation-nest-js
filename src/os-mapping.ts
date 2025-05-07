@@ -2,6 +2,7 @@
 export const osDownloadMap = {
   ubuntu22: {
     url: 'https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64.img',
+    username: 'ubuntu',
     filename: 'jammy-server-cloudimg-amd64.img',
     formalName: 'ubuntu-22.04',
     variant: 'ubuntujammy',
@@ -14,6 +15,7 @@ export const osDownloadMap = {
   },
   ubuntu24: {
     url: 'https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img',
+    username: 'ubuntu',
     filename: 'noble-server-cloudimg-amd64.img',
     formalName: 'ubuntu-24.04',
     variant: 'ubuntunoble',
@@ -26,6 +28,7 @@ export const osDownloadMap = {
   },
   centos8: {
     url: 'https://cloud.centos.org/centos/8/x86_64/images/CentOS-8-GenericCloud-8.1.1911-20200113.3.x86_64.qcow2',
+    username: 'root',
     filename: 'CentOS-8-GenericCloud-8.1.1911-20200113.3.x86_64.qcow2',
     formalName: 'Centos-8',
     variant: 'centos8',

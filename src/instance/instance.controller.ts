@@ -1,9 +1,15 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { InstanceService } from './instance.service';
+import { CreateInstanceRequest } from './instance.interface';
 
 @Controller('instance')
 export class InstanceController {
   constructor(private instanceService: InstanceService) {}
+
+  @Post()
+  async createInstance(@Body() body: CreateInstanceRequest) {
+    return this.instanceService.createInstance(body);
+  }
 
   @Get()
   async getInstanceList() {
