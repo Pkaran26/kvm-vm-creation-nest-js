@@ -7,3 +7,11 @@ curl -X POST http://localhost:3000/instance   -H "Content-Type: application/json
     "network": "myfreenetwork",    
     "ssh": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIS0mmbs3DZBIiJRvxdOQYT0L44+IButThC+egyUBU/+ Indiqus"
   }'
+
+1. Volume [Create, attach, detach, download ]
+1. Create database
+2. User [Signup, login, profile, logout, update]
+3. Packs [create, list, update]
+4. Subscription
+5. Instance Usage
+6. Invoice

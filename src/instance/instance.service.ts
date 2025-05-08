@@ -1,41 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import { exec } from 'child_process';
 import { existsSync, writeFileSync, unlinkSync, mkdirSync, unlink } from 'fs';
 import { join, basename } from 'path';
 import { CreateInstanceRequest } from './instance.interface';
 import { osDownloadMap } from 'src/os-mapping';
+import { HelperService } from 'src/helper/helper.service';
 
 @Injectable()
 export class InstanceService {
-  executeCommand(command: string, timeout: number = 30000) {
-    return new Promise((resolve, reject) => {
-      exec(command, { timeout }, (error, stdout, stderr) => {
-        if (error) {
-          console.error(`Error executing command: ${command}`);
-          console.error(stderr);
-          // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
-          reject(stderr);
-          return;
-        }
-        resolve(stdout.trim());
-      });
-    });
-  }
-
-  parseCMDResponse(text: string) {
-    const lines = text.trim().split('\n');
-    const header = lines[0].split(/\s{2,}/).map((s) => s.trim()); // Split by 2+ spaces and trim
-    const dataLines = lines.slice(2); // Skip header and separator
-
-    return dataLines.map((line) => {
-      const values = line.split(/\s{2,}/).map((v) => v.trim()); // Split by 2+ spaces and trim
-      const obj = {};
-      header.forEach((key, index) => {
-        obj[key] = values[index];
-      });
-      return obj;
-    });
-  }
+  constructor(private helperService: HelperService) {}
 
   async createInstance(body: CreateInstanceRequest) {
     // --- Configuration ---
@@ -79,7 +51,9 @@ export class InstanceService {
     try {
       createDirectories();
       if (!existsSync(baseImagePath)) {
-        await this.executeCommand(`wget -O ${baseImagePath} ${OS_IMAGE_URL}`);
+        await this.helperService.executeCommand(
+          `wget -O ${baseImagePath} ${OS_IMAGE_URL}`,
+        );
       } else {
         console.log(
           `[INFO] Base image ${baseImagePath} already exists. Skipping download.`,
@@ -92,7 +66,7 @@ export class InstanceService {
         );
         unlinkSync(vmDiskPath);
       }
-      await this.executeCommand(
+      await this.helperService.executeCommand(
         `qemu-img create -f qcow2 -b ${basename(
           baseImagePath,
         )} -F qcow2 ${vmDiskPath} ${VM_DISK_SIZE}`,
@@ -142,12 +116,12 @@ local-hostname: ${HOSTNAME}
       // Check for genisoimage, fallback to mkisofs
       let isoCommand = 'genisoimage';
       try {
-        await this.executeCommand('command -v genisoimage');
+        await this.helperService.executeCommand('command -v genisoimage');
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (e) {
         console.log('[INFO] genisoimage not found, trying mkisofs.');
         try {
-          await this.executeCommand('command -v mkisofs');
+          await this.helperService.executeCommand('command -v mkisofs');
           isoCommand = 'mkisofs';
         } catch (e2) {
           console.error(
@@ -157,7 +131,7 @@ local-hostname: ${HOSTNAME}
         }
       }
 
-      await this.executeCommand(
+      await this.helperService.executeCommand(
         `${isoCommand} -output ${cloudInitIsoPath} -volid cidata -joliet -rock ${userDataPath} ${metaDataPath}`,
       );
       console.log(
@@ -179,7 +153,7 @@ sudo virt-install \\
       // For Ubuntu Noble (24.04), 'ubuntunoble' is the expected os-variant.
       // If 'ubuntunoble' isn't recognized, try a more generic 'ubuntu22.04' or 'generic' and check 'osinfo-query os'.
 
-      await this.executeCommand(virtInstallCommand);
+      await this.helperService.executeCommand(virtInstallCommand);
 
       console.log(`\n--- VM ${VM_NAME} Creation Process Completed ---`);
       console.log(`VM Disk: ${vmDiskPath}`);
@@ -219,8 +193,10 @@ sudo virt-install \\
 
   async getInstanceList() {
     try {
-      const output = (await this.executeCommand('virsh list --all')) as string;
-      const list = this.parseCMDResponse(output);
+      const output = (await this.helperService.executeCommand(
+        'virsh list --all',
+      )) as string;
+      const list = this.helperService.parseCMDResponse(output);
       return { status: true, instances: list };
     } catch (error) {
       return {
@@ -235,10 +211,10 @@ sudo virt-install \\
 
   async getInstanceDetail(vmName: string) {
     try {
-      const output = (await this.executeCommand(
+      const output = (await this.helperService.executeCommand(
         `virsh dominfo ${vmName}`,
       )) as string;
-      const output2 = (await this.executeCommand(
+      const output2 = (await this.helperService.executeCommand(
         `virsh domifaddr ${vmName}`,
       )) as string;
       const lines = output
@@ -253,9 +229,8 @@ sudo virt-install \\
         const [key, value] = line.split(':').map((item) => item.trim());
         vmInfo[key] = value;
       });
-      const instanceAddr: { Address: string } = this.parseCMDResponse(
-        output2,
-      )[0] as { Address: string };
+      const instanceAddr: { Address: string } =
+        this.helperService.parseCMDResponse(output2)[0] as { Address: string };
       return {
         status: true,
         instanceDetail: {
@@ -280,7 +255,9 @@ sudo virt-install \\
 
   async performInstanceAction(vmName: string, action: string) {
     try {
-      const output = await this.executeCommand(`virsh ${action} ${vmName}`);
+      const output = await this.helperService.executeCommand(
+        `virsh ${action} ${vmName}`,
+      );
       const message =
         action == 'start'
           ? 'started'
@@ -306,8 +283,8 @@ sudo virt-install \\
 
   async deleteInstance(vmName: string) {
     try {
-      await this.executeCommand(`virsh destroy ${vmName}`);
-      await this.executeCommand(`virsh undefine ${vmName}`);
+      await this.helperService.executeCommand(`virsh destroy ${vmName}`);
+      await this.helperService.executeCommand(`virsh undefine ${vmName}`);
       const VM_IMAGE_BASE_PATH = '/var/lib/libvirt/images';
       const imageName = `${vmName}.qcow2`;
       const diskPath = join(VM_IMAGE_BASE_PATH, imageName);

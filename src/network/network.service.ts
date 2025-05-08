@@ -1,46 +1,20 @@
 import { Injectable } from '@nestjs/common';
-import { exec } from 'child_process';
 import { existsSync, writeFileSync } from 'fs';
+import { HelperService } from 'src/helper/helper.service';
 
 @Injectable()
 export class NetworkService {
-  executeCommand(command: string, timeout: number = 30000) {
-    return new Promise((resolve, reject) => {
-      exec(command, { timeout }, (error, stdout, stderr) => {
-        if (error) {
-          console.error(`Error executing command: ${command}`);
-          console.error(stderr);
-          // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
-          reject(stderr);
-          return;
-        }
-        resolve(stdout.trim());
-      });
-    });
-  }
-
-  parseCMDResponse(text: string) {
-    const lines = text.trim().split('\n');
-    const header = lines[0].split(/\s{2,}/).map((s) => s.trim()); // Split by 2+ spaces and trim
-    const dataLines = lines.slice(2); // Skip header and separator
-
-    return dataLines.map((line) => {
-      const values = line.split(/\s{2,}/).map((v) => v.trim()); // Split by 2+ spaces and trim
-      const obj = {};
-      header.forEach((key, index) => {
-        obj[key] = values[index];
-      });
-      return obj;
-    });
-  }
+  constructor(private helperService: HelperService) {}
 
   async getNetworkList() {
     try {
-      const output: any = await this.executeCommand('virsh net-list --all');
+      const output: any = await this.helperService.executeCommand(
+        'virsh net-list --all',
+      );
       return {
         status: true,
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-        networkList: this.parseCMDResponse(output),
+        networkList: this.helperService.parseCMDResponse(output),
       };
     } catch (error) {
       return {
@@ -79,7 +53,7 @@ export class NetworkService {
             `;
 
         // Replace 'your-uuid' with a real UUID.
-        const uuid = await this.executeCommand('uuidgen');
+        const uuid = await this.helperService.executeCommand('uuidgen');
         const finalNetworkXml = defaultNetworkXml.replace(
           'your-uuid',
           uuid as string,
@@ -94,7 +68,9 @@ export class NetworkService {
 
       // Define the network in libvirt
       try {
-        await this.executeCommand(`sudo virsh net-define ${networkXmlPath}`);
+        await this.helperService.executeCommand(
+          `sudo virsh net-define ${networkXmlPath}`,
+        );
         console.log(`Network "${networkName}" defined successfully.`);
       } catch (defineError) {
         if (
@@ -115,7 +91,9 @@ export class NetworkService {
 
       // Start the network
       try {
-        await this.executeCommand(`sudo virsh net-start ${networkName}`);
+        await this.helperService.executeCommand(
+          `sudo virsh net-start ${networkName}`,
+        );
         console.log(`Network "${networkName}" started successfully.`);
       } catch (startError) {
         if (
@@ -137,11 +115,13 @@ export class NetworkService {
       }
 
       // Set the network to autostart on boot
-      await this.executeCommand(`sudo virsh net-autostart ${networkName}`);
+      await this.helperService.executeCommand(
+        `sudo virsh net-autostart ${networkName}`,
+      );
       console.log(`Network "${networkName}" set to autostart on boot.`);
 
       // List networks to confirm
-      const listNetworksOutput = await this.executeCommand(
+      const listNetworksOutput = await this.helperService.executeCommand(
         `sudo virsh net-list --all`,
       );
 

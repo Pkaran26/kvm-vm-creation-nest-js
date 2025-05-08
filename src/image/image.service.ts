@@ -2,25 +2,12 @@ import { Injectable } from '@nestjs/common';
 import { osDownloadMap } from 'src/os-mapping';
 import { readdir } from 'fs';
 import { join } from 'path';
-import { exec } from 'child_process';
+import { HelperService } from 'src/helper/helper.service';
 const ISO_DOWNLOAD_PATH = './vm_images';
 
 @Injectable()
 export class ImageService {
-  executeCommand(command: string, timeout: number = 30000) {
-    return new Promise((resolve, reject) => {
-      exec(command, { timeout }, (error, stdout, stderr) => {
-        if (error) {
-          console.error(`Error executing command: ${command}`);
-          console.error(stderr);
-          // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
-          reject(stderr);
-          return;
-        }
-        resolve(stdout.trim());
-      });
-    });
-  }
+  constructor(private helperService: HelperService) {}
 
   getInstanceImageList() {
     return new Promise((resolve, reject) => {
@@ -60,7 +47,7 @@ export class ImageService {
     const command = `wget -O "${outputPath}" "${url}"`;
     console.log(`Downloading ${filename} from ${url} to ${outputPath}`);
     try {
-      await this.executeCommand(command, 600000); // 5 minutes timeout
+      await this.helperService.executeCommand(command, 600000); // 5 minutes timeout
       console.log(`Successfully downloaded ${filename}`);
       return outputPath;
     } catch (error) {

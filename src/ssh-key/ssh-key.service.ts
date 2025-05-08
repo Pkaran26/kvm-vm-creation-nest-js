@@ -32,8 +32,8 @@ export class SshKeyService {
           }
           // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           const { private: privateKey, public: publicKey } = keypair;
-          writeFileSync(`${this.SSH_DIR}/${keyName}`, privateKey as string);
-          writeFileSync(`${this.SSH_DIR}/${keyName}.pub`, publicKey as string);
+          writeFileSync(`${this.SSH_DIR}/${keyName}`, privateKey);
+          writeFileSync(`${this.SSH_DIR}/${keyName}.pub`, publicKey);
           resolve({
             status: true,
             // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
