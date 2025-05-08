@@ -14,8 +14,11 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToMany,
 } from 'typeorm';
 import { Subscription } from 'src/subscription/subscription.entity';
+import { InvoiceItem } from './invoice-item.entity';
+import { Relation } from 'typeorm';
 
 @Entity('invoices')
 export class Invoice {
@@ -62,6 +65,9 @@ export class Invoice {
 
   @Column({ type: 'text', nullable: true })
   notes?: string;
+
+  @OneToMany(() => InvoiceItem, (item) => item)
+  items: Relation<InvoiceItem[]>;
 
   @CreateDateColumn()
   createdAt: Date;

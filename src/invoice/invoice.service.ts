@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -7,6 +8,7 @@ import { Invoice } from './invoice.entity';
 import { InvoiceStatus } from './invoice.status.enum';
 import { Subscription } from 'src/subscription/subscription.entity';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { InvoiceItem } from './invoice-item.entity';
 
 @Injectable()
 export class InvoiceService {
@@ -17,6 +19,8 @@ export class InvoiceService {
     private readonly invoiceRepository: Repository<Invoice>,
     @InjectRepository(Subscription)
     private readonly subscriptionRepository: Repository<Subscription>,
+    @InjectRepository(InvoiceItem) // Inject the InvoiceItem repository
+    private readonly invoiceItemRepository: Repository<InvoiceItem>,
   ) {}
 
   @Cron(CronExpression.EVERY_1ST_DAY_OF_MONTH_AT_MIDNIGHT, {
@@ -91,7 +95,7 @@ export class InvoiceService {
   async generateMonthlyInvoice(
     subscriptionId: number,
     billingMonthDate: Date,
-  ): Promise<Invoice> {
+  ): Promise<Invoice | null> {
     const billingMonthMoment = moment.utc(billingMonthDate);
     this.logger.log(
       `Attempting to generate invoice for subscription ${subscriptionId} for month of ${billingMonthMoment.format('YYYY-MM')}`,
@@ -176,7 +180,25 @@ export class InvoiceService {
           : 'Full monthly service period.',
     });
 
-    return this.invoiceRepository.save(newInvoice);
+    const savedInvoice = await this.invoiceRepository.save(newInvoice);
+
+    const invoiceItem = this.invoiceItemRepository.create({
+      invoice: savedInvoice,
+      invoiceId: savedInvoice.id,
+      description: `Monthly Subscription for ${moment(savedInvoice.billingPeriodStart).format('MMM YYYY')} - ${moment(savedInvoice.billingPeriodEnd).format('MMM YYYY')}`,
+      quantity: 1,
+      unitPrice: savedInvoice.amountDue, // The total amount due can be the unit price if it's a single item
+      amount: savedInvoice.amountDue,
+      detail: subscription.metaData,
+    });
+
+    await this.invoiceItemRepository.save(invoiceItem);
+
+    // After saving the line item, you might want to fetch the invoice with its items
+    return this.invoiceRepository.findOne({
+      where: { id: savedInvoice.id },
+      relations: ['items'],
+    });
   }
 
   async findInvoiceById(id: number): Promise<Invoice | null> {
