@@ -38,7 +38,7 @@ export class InstanceService {
       };
     }
 
-    const VM_NAME = body.instanceName;
+    const VM_NAME = body.instanceName + '-' + Math.random().toString();
     const SELECTED_OS =
       osDownloadMap[body.isoImageName as keyof typeof osDownloadMap];
     if (!SELECTED_OS)
@@ -203,10 +203,15 @@ sudo virt-install \\
         `5. To manage the VM: sudo virsh <command> ${VM_NAME} (e.g., shutdown, start, destroy)`,
       );
       const subscription = await this.subscriptionService.createSubscription({
-        name: VM_NAME,
+        name: 'Instance Subscription',
         userId: 1,
-        cpuPackId: body.cpuPackId,
-        diskPackId: body.diskPackId,
+        totalAmount: cpuPack.monthlyPrice + diskPack.monthlyPrice,
+        status: 'active',
+        metaData: JSON.stringify({
+          vmName: VM_NAME,
+          cpuPack: cpuPack,
+          diskPack: diskPack,
+        }),
       });
       const instance = await this.getInstanceDetail(VM_NAME);
       return {
@@ -330,6 +335,7 @@ sudo virt-install \\
 
   async deleteInstance(instanceName: string) {
     try {
+      await this.subscriptionService.closeSubscription(instanceName);
       await this.helperService.executeCommand(`virsh destroy ${instanceName}`);
       await this.helperService.executeCommand(`virsh undefine ${instanceName}`);
       const VM_IMAGE_BASE_PATH = '/var/lib/libvirt/images';

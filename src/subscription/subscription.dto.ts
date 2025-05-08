@@ -11,9 +11,13 @@ export class CreateSubscriptionDto {
 
   @IsNotEmpty()
   @IsNumber()
-  cpuPackId: number;
+  totalAmount: number;
 
   @IsNotEmpty()
-  @IsNumber()
-  diskPackId: number;
+  @IsString()
+  status: string;
+
+  @IsNotEmpty()
+  @IsString()
+  metaData: string;
 }

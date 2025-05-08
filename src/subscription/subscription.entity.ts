@@ -9,8 +9,6 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
-import { CPUPack } from 'src/instance-pack/cpu-pack/cpu-pack.entity';
-import { DiskPack } from 'src/instance-pack/disk-pack/disk-pack.entity';
 import { User } from 'src/user/user.entity';
 
 @Entity()
@@ -35,29 +33,20 @@ export class Subscription {
   @IsNumber()
   userId: number;
 
-  @ManyToOne(() => CPUPack, (pack) => pack, {
-    cascade: false,
-    eager: false,
-  })
-  @JoinColumn({ name: 'cpuPackId' })
-  cpuPack: CPUPack;
-
-  @Column({ name: 'cpuPackId' })
+  @Column()
   @IsNotEmpty()
   @IsNumber()
-  cpuPackId: number;
+  totalAmount: number;
 
-  @ManyToOne(() => DiskPack, (pack) => pack, {
-    cascade: false,
-    eager: false,
-  })
-  @JoinColumn({ name: 'diskPackId' })
-  diskPack: DiskPack;
-
-  @Column({ name: 'diskPackId' })
+  @Column()
   @IsNotEmpty()
-  @IsNumber()
-  diskPackId: number;
+  @IsString()
+  status: string; // active // inactive
+
+  @Column({ type: 'text' })
+  @IsNotEmpty()
+  @IsString()
+  metaData: string;
 
   @CreateDateColumn()
   createdAt: Date;
