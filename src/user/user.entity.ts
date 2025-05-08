@@ -7,16 +7,12 @@ export class User {
   id: number;
 
   @Column()
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
   @IsNotEmpty()
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
   @IsString()
   name: string;
 
   @Column({ unique: true })
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
   @IsNotEmpty()
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
   @IsEmail()
   email: string;
 }
