@@ -9,6 +9,10 @@ import { SubscriptionModule } from './subscription/subscription.module';
 import { ImageModule } from './image/image.module';
 import { NetworkModule } from './network/network.module';
 import { SshKeyModule } from './ssh-key/ssh-key.module';
+import { VolumeModule } from './volume/volume.module';
+import { StoragePoolService } from './storage-pool/storage-pool.service';
+import { StoragePoolModule } from './storage-pool/storage-pool.module';
+import { HelperService } from './helper/helper.service';
 
 @Module({
   imports: [
@@ -25,8 +29,10 @@ import { SshKeyModule } from './ssh-key/ssh-key.module';
     ImageModule,
     NetworkModule,
     SshKeyModule,
+    VolumeModule,
+    StoragePoolModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, StoragePoolService, HelperService],
 })
 export class AppModule {}

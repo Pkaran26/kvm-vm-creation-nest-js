@@ -209,13 +209,13 @@ sudo virt-install \\
     }
   }
 
-  async getInstanceDetail(vmName: string) {
+  async getInstanceDetail(instanceName: string) {
     try {
       const output = (await this.helperService.executeCommand(
-        `virsh dominfo ${vmName}`,
+        `virsh dominfo ${instanceName}`,
       )) as string;
       const output2 = (await this.helperService.executeCommand(
-        `virsh domifaddr ${vmName}`,
+        `virsh domifaddr ${instanceName}`,
       )) as string;
       const lines = output
         .split('\n')
@@ -246,17 +246,17 @@ sudo virt-install \\
       return {
         status: true,
         instanceDetail: {},
-        error: `VM "${vmName}" not found or details unavailable`,
+        error: `VM "${instanceName}" not found or details unavailable`,
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         details: error,
       };
     }
   }
 
-  async performInstanceAction(vmName: string, action: string) {
+  async performInstanceAction(instanceName: string, action: string) {
     try {
       const output = await this.helperService.executeCommand(
-        `virsh ${action} ${vmName}`,
+        `virsh ${action} ${instanceName}`,
       );
       const message =
         action == 'start'
@@ -268,25 +268,25 @@ sudo virt-install \\
               : '';
       return {
         status: true,
-        message: `VM "${vmName}" ${message} successfully`,
+        message: `VM "${instanceName}" ${message} successfully`,
         details: output,
       };
     } catch (error) {
       return {
         status: true,
-        error: `Failed to start VM "${vmName}"`,
+        error: `Failed to start VM "${instanceName}"`,
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         details: error,
       };
     }
   }
 
-  async deleteInstance(vmName: string) {
+  async deleteInstance(instanceName: string) {
     try {
-      await this.helperService.executeCommand(`virsh destroy ${vmName}`);
-      await this.helperService.executeCommand(`virsh undefine ${vmName}`);
+      await this.helperService.executeCommand(`virsh destroy ${instanceName}`);
+      await this.helperService.executeCommand(`virsh undefine ${instanceName}`);
       const VM_IMAGE_BASE_PATH = '/var/lib/libvirt/images';
-      const imageName = `${vmName}.qcow2`;
+      const imageName = `${instanceName}.qcow2`;
       const diskPath = join(VM_IMAGE_BASE_PATH, imageName);
 
       try {
@@ -306,11 +306,42 @@ sudo virt-install \\
         }
       }
 
-      return { status: true, message: `VM "${vmName}" deleted successfully.` };
+      return {
+        status: true,
+        message: `VM "${instanceName}" deleted successfully.`,
+      };
     } catch (error) {
       return {
         status: false,
-        error: `Failed to delete VM "${vmName}"`,
+        error: `Failed to delete VM "${instanceName}"`,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        details: error,
+      };
+    }
+  }
+
+  async attachedVolumes(instanceName: string) {
+    try {
+      const output = (await this.helperService.executeCommand(
+        `virsh domblklist ${instanceName}`,
+      )) as string;
+      const list = this.helperService.parseCMDResponse(output);
+      return {
+        status: true,
+        volumes: list.map((e: { Source: string; Target: string }) => {
+          return {
+            ...e,
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+            Name: e.Source.split('/')[e.Source.split('/').length - 1],
+            rootVolume: e.Target == 'vda' || e.Target == 'sda' ? true : false,
+          };
+        }),
+      };
+    } catch (error) {
+      return {
+        status: true,
+        volumes: [],
+        error: 'Failed to list Volumes',
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         details: error,
       };

@@ -35,4 +35,9 @@ export class InstanceController {
   async deleteInstance(@Param() params: { name: string }) {
     return this.instanceService.deleteInstance(params.name);
   }
+
+  @Get('volume/:name')
+  async attachedVolumes(@Param() params: { name: string }) {
+    return this.instanceService.attachedVolumes(params.name);
+  }
 }
