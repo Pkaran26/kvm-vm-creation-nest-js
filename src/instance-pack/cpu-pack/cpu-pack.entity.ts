@@ -1,5 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
 @Entity()
@@ -31,4 +37,10 @@ export class CPUPack {
   @IsNotEmpty()
   @IsNumber()
   hourlyPrice: number;
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 }

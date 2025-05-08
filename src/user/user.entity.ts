@@ -1,4 +1,10 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
 
 @Entity()
@@ -15,4 +21,10 @@ export class User {
   @IsNotEmpty()
   @IsEmail()
   email: string;
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 }

@@ -1,17 +1,33 @@
 curl -X POST http://localhost:3000/instance   -H "Content-Type: application/json"   -d '{
-    "instanceName": "ubuntu-pk-22",
+    "instanceName": "ubuntu-pk-22-1",
     "isoImageName": "ubuntu22",
-    "memory": 3072,
-    "vcpu": 2,
-    "diskSizeGB": 20,
     "network": "myfreenetwork",    
-    "ssh": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIS0mmbs3DZBIiJRvxdOQYT0L44+IButThC+egyUBU/+ Indiqus"
+    "ssh": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIS0mmbs3DZBIiJRvxdOQYT0L44+IButThC+egyUBU/+ Indiqus",
+    "cpuPackId": 2,
+    "diskPackId": 2
   }'
 
-1. Volume [Create, attach, detach, download ]
-1. Create database
-2. User [Signup, login, profile, logout, update]
-3. Packs [create, list, update]
+curl -X POST http://localhost:3000/user   -H "Content-Type: application/json"   -d '{
+    "name": "Prateek Kaushik",
+    "email": "kaushik@gmail.com"
+  }'
+
+curl -X POST http://localhost:3000/cpu-pack   -H "Content-Type: application/json"   -d '{
+    "name": "2C3R",
+    "cpu": 2,
+    "ram": 3,
+    "monthlyPrice": 200,
+    "hourlyPrice": 6.66
+  }'
+
+curl -X POST http://localhost:3000/disk-pack   -H "Content-Type: application/json"   -d '{
+    "name": "Small",
+    "diskSize": 20,
+    "monthlyPrice": 100,
+    "hourlyPrice": 3.3
+  }'
+
+2. User [Signup, login, logout]
 4. Subscription
 5. Instance Usage
 6. Invoice

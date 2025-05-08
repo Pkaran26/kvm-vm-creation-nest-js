@@ -5,6 +5,8 @@ import {
   Column,
   JoinColumn,
   ManyToOne,
+  CreateDateColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
 import { CPUPack } from 'src/instance-pack/cpu-pack/cpu-pack.entity';
@@ -56,4 +58,10 @@ export class Subscription {
   @IsNotEmpty()
   @IsNumber()
   diskPackId: number;
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 }

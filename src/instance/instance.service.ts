@@ -4,28 +4,55 @@ import { join, basename } from 'path';
 import { CreateInstanceRequest } from './instance.interface';
 import { osDownloadMap } from 'src/os-mapping';
 import { HelperService } from 'src/helper/helper.service';
+import { SubscriptionService } from 'src/subscription/subscription.service';
+import { CpuPackService } from 'src/instance-pack/cpu-pack/cpu-pack.service';
+import { DiskPackService } from 'src/instance-pack/disk-pack/disk-pack.service';
 
 @Injectable()
 export class InstanceService {
-  constructor(private helperService: HelperService) {}
+  constructor(
+    private helperService: HelperService,
+    private subscriptionService: SubscriptionService,
+    private cpuPackService: CpuPackService,
+    private diskPackService: DiskPackService,
+  ) {}
 
   async createInstance(body: CreateInstanceRequest) {
-    // --- Configuration ---
-    const VM_NAME = body.instanceName; //"ubuntu-noble-vm-2";
+    /**memory: number;
+  vcpu: number;
+  diskSizeGB: number; */
+    const cpuPack = await this.cpuPackService.getCPUPackById(body.cpuPackId);
+    const diskPack = await this.diskPackService.getDiskPackById(
+      body.diskPackId,
+    );
+    if (!cpuPack) {
+      return {
+        status: false,
+        message: 'CPU pack not found',
+      };
+    }
+    if (!diskPack) {
+      return {
+        status: false,
+        message: 'Disk pack not found',
+      };
+    }
+
+    const VM_NAME = body.instanceName;
     const SELECTED_OS =
       osDownloadMap[body.isoImageName as keyof typeof osDownloadMap];
     if (!SELECTED_OS)
       return { status: false, error: 'isoImageName is invalid' };
 
     const OS_IMAGE_URL = SELECTED_OS.url;
-    const DOWNLOAD_DIR = './vm_images'; // Directory to store downloaded and created images
+    const DOWNLOAD_DIR = './vm_images';
     const BASE_IMAGE_NAME = SELECTED_OS.filename;
     const VM_DISK_NAME = `${VM_NAME}.qcow2`;
     const CLOUD_INIT_ISO_NAME = `${VM_NAME}-cloud-init.iso`;
 
-    const VM_MEMORY = body.memory.toString(); //"3072"; // MB
-    const VM_VCPUS = body.vcpu.toString(); //"2";
-    const VM_DISK_SIZE = body.diskSizeGB > 20 ? `${body.diskSizeGB}G` : '20G'; // Size for the new VM disk based on the cloud image
+    const VM_MEMORY = (cpuPack.ram * 1024).toString();
+    const VM_VCPUS = cpuPack.cpu.toString();
+    const VM_DISK_SIZE = `${diskPack.diskSize}G`;
 
     const SSH_PUBLIC_KEY = body.ssh;
     const USERNAME = SELECTED_OS.username;
@@ -175,10 +202,17 @@ sudo virt-install \\
       console.log(
         `5. To manage the VM: sudo virsh <command> ${VM_NAME} (e.g., shutdown, start, destroy)`,
       );
+      const subscription = await this.subscriptionService.createSubscription({
+        name: VM_NAME,
+        userId: 1,
+        cpuPackId: body.cpuPackId,
+        diskPackId: body.diskPackId,
+      });
       const instance = await this.getInstanceDetail(VM_NAME);
       return {
         status: true,
         instanceDetail: instance,
+        subscription: subscription,
         message: 'Instance created successfully',
       };
     } catch (error) {
@@ -214,9 +248,15 @@ sudo virt-install \\
       const output = (await this.helperService.executeCommand(
         `virsh dominfo ${instanceName}`,
       )) as string;
-      const output2 = (await this.helperService.executeCommand(
-        `virsh domifaddr ${instanceName}`,
-      )) as string;
+      let output2 = '';
+      try {
+        output2 = (await this.helperService.executeCommand(
+          `virsh domifaddr ${instanceName}`,
+        )) as string;
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      } catch (error) {
+        /* empty */
+      }
       const lines = output
         .split('\n')
         .map((line) => line.trim())
@@ -229,17 +269,24 @@ sudo virt-install \\
         const [key, value] = line.split(':').map((item) => item.trim());
         vmInfo[key] = value;
       });
-      const instanceAddr: { Address: string } =
-        this.helperService.parseCMDResponse(output2)[0] as { Address: string };
+      const instanceAddr: { Address: string } | string = output2
+        ? (this.helperService.parseCMDResponse(output2)[0] as {
+            Address: string;
+          })
+        : '';
+      let payload = {};
+      if (instanceAddr && typeof instanceAddr == 'object') {
+        payload = {
+          ...instanceAddr,
+          Address: instanceAddr.Address.split('/')[0],
+        };
+      }
       return {
         status: true,
         instanceDetail: {
           ...vmInfo,
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           instanceName: vmInfo.Name,
-          ...instanceAddr,
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-          Address: instanceAddr.Address.split('/')[0],
+          ...payload,
         },
       };
     } catch (error) {
