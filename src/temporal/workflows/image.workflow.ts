@@ -9,7 +9,6 @@ const { downloadImage } = proxyActivities<typeof activities>({
 });
 
 export async function downloadImageWorkflow(url: string, filename: string) {
-  console.log('url work', url, filename);
   // eslint-disable-next-line @typescript-eslint/no-unsafe-call
   await downloadImage(url, filename);
 }

@@ -1,4 +1,4 @@
-// import { join } from 'path';
+import { join } from 'path';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 
@@ -9,8 +9,7 @@ export async function downloadImage(
   url: string,
   filename: string,
 ): Promise<string> {
-  console.log('url act', url, filename);
-  const outputPath = ISO_DOWNLOAD_PATH + filename;
+  const outputPath = join(ISO_DOWNLOAD_PATH, filename);
   const command = `wget -O "${outputPath}" "${url}"`;
   console.log(`Executing: ${command}`);
   await execAsync(command, { timeout: 600000 }); // 10 min timeout

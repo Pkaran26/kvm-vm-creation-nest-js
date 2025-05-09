@@ -41,9 +41,7 @@ export class ImageService {
 
     const { url, filename } =
       osDownloadMap[osName as keyof typeof osDownloadMap];
-    console.log('url ser', url, filename);
     // Start Temporal workflow
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     await this.temporalClient.start('downloadImageWorkflow', {
       args: [url, filename],
       taskQueue: 'image-download-queue',
