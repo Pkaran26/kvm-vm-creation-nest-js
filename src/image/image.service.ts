@@ -52,6 +52,7 @@ export class ImageService {
 
     return {
       status: true,
+      workflowId: `download-${osName}-${Date.now()}`,
       message: `${osName} ISO download started. It will appear on the list once downloaded.`,
     };
   }

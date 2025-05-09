@@ -1,16 +1,20 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 import { Module, Global } from '@nestjs/common';
 import { WorkflowClient } from '@temporalio/client';
+import { TemporalService } from './temporal.service';
+import { WorkflowController } from './temporal.controller';
 
 @Global()
 @Module({
   providers: [
     {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       provide: WorkflowClient,
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
       useValue: new WorkflowClient(), // Defaults to localhost:7233
     },
+    TemporalService,
   ],
-  exports: [WorkflowClient],
+  controllers: [WorkflowController],
+  exports: [WorkflowClient, TemporalService],
 })
 export class TemporalModule {}
