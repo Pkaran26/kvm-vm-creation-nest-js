@@ -5,10 +5,11 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Invoice } from './invoice.entity';
 import { Subscription } from 'src/subscription/subscription.entity';
 import { ScheduleModule } from '@nestjs/schedule';
+import { InvoiceItem } from './invoice-item.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Invoice, Subscription]),
+    TypeOrmModule.forFeature([Invoice, Subscription, InvoiceItem]),
     ScheduleModule.forRoot(),
   ],
   controllers: [InvoiceController],

@@ -1,78 +1,58 @@
 import { Injectable } from '@nestjs/common';
+import { readdir } from 'fs/promises';
 import { osDownloadMap } from 'src/os-mapping';
-import { readdir } from 'fs';
-import { join } from 'path';
-import { HelperService } from 'src/helper/helper.service';
+import { WorkflowClient } from '@temporalio/client';
+
 const ISO_DOWNLOAD_PATH = './vm_images';
 
 @Injectable()
 export class ImageService {
-  constructor(private helperService: HelperService) {}
+  constructor(private readonly temporalClient: WorkflowClient) {}
 
-  getInstanceImageList() {
-    return new Promise((resolve, reject) => {
-      try {
-        readdir(ISO_DOWNLOAD_PATH, (err, files) => {
-          console.log('files ', files);
-          if (files) {
-            const imageList: { name: string; downloaded: boolean }[] =
-              Object.keys(osDownloadMap).map((key) => {
-                return {
-                  name: osDownloadMap[key as keyof typeof osDownloadMap]
-                    .formalName,
-                  downloaded: files.includes(
-                    osDownloadMap[key as keyof typeof osDownloadMap].filename,
-                  ),
-                };
-              });
-            resolve({ status: true, imageList: imageList });
-          }
-          resolve({ status: false, imageList: [] });
-        });
-      } catch (error) {
-        // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
-        reject({
-          status: false,
-          imageList: [],
-          error: 'Failed to list ISOs',
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-          details: error,
-        });
-      }
-    });
-  }
-
-  async downloadFunc(url: string, filename: string) {
-    const outputPath = join(ISO_DOWNLOAD_PATH, filename);
-    const command = `wget -O "${outputPath}" "${url}"`;
-    console.log(`Downloading ${filename} from ${url} to ${outputPath}`);
+  async getInstanceImageList() {
     try {
-      await this.helperService.executeCommand(command, 600000); // 5 minutes timeout
-      console.log(`Successfully downloaded ${filename}`);
-      return outputPath;
+      const files = await readdir(ISO_DOWNLOAD_PATH);
+      const imageList = Object.keys(osDownloadMap).map((key) => {
+        const mapItem = osDownloadMap[key as keyof typeof osDownloadMap];
+        return {
+          name: mapItem.formalName,
+          downloaded: files.includes(mapItem.filename),
+        };
+      });
+      return { status: true, imageList };
     } catch (error) {
-      console.error(`Error downloading ${filename}: ${error}`);
+      return {
+        status: false,
+        imageList: [],
+        error: 'Failed to list ISOs',
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        details: error,
+      };
     }
   }
 
-  downloadImage(osName: string) {
+  async downloadImage(osName: string) {
     if (!osDownloadMap[osName]) {
       return {
         status: false,
-        error: `Unsupported OS name: ${osName}. Available options: ${Object.keys(
-          osDownloadMap,
-        ).join(', ')}`,
+        error: `Unsupported OS name: ${osName}. Available: ${Object.keys(osDownloadMap).join(', ')}`,
       };
     }
 
     const { url, filename } =
       osDownloadMap[osName as keyof typeof osDownloadMap];
-    this.downloadFunc(url, filename).catch((error) => {
-      console.error('Download failed:', error);
+    console.log('url ser', url, filename);
+    // Start Temporal workflow
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+    await this.temporalClient.start('downloadImageWorkflow', {
+      args: [url, filename],
+      taskQueue: 'image-download-queue',
+      workflowId: `download-${osName}-${Date.now()}`,
     });
+
     return {
       status: true,
-      message: `${osName} ISO downloading started. It will appear on the list once downloaded`,
+      message: `${osName} ISO download started. It will appear on the list once downloaded.`,
     };
   }
 }
