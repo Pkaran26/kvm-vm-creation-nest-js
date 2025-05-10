@@ -13,11 +13,5 @@ export async function createInstanceWorkflow(
   instanceName: string;
   message: string;
 }> {
-  const response: {
-    status: boolean;
-    instanceName: string;
-    message: string;
-  } = await createInstance(body);
-
-  return response;
+  return await createInstance(body);
 }
