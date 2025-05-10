@@ -1,5 +1,5 @@
 curl -X POST http://localhost:3000/instance   -H "Content-Type: application/json"   -d '{
-    "instanceName": "ubuntu-22-11",
+    "instanceName": "ubuntu-22-12",
     "isoImageName": "ubuntu22",
     "network": "myfreenetwork",    
     "ssh": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIS0mmbs3DZBIiJRvxdOQYT0L44+IButThC+egyUBU/+ Indiqus",
