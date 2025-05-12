@@ -1,10 +1,11 @@
 curl -X POST http://localhost:3000/instance   -H "Content-Type: application/json"   -d '{
-    "instanceName": "ubuntu-22-12",
+    "instanceName": "ubuntu-22-13",
     "isoImageName": "ubuntu22",
     "network": "myfreenetwork",    
-    "ssh": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIS0mmbs3DZBIiJRvxdOQYT0L44+IButThC+egyUBU/+ Indiqus",
+    "ssh": "test",
     "cpuPackId": 1,
-    "diskPackId": 1
+    "diskPackId": 1,
+    "instantApps": ["nginx", "mysql"]
   }'
 
 curl -X POST http://localhost:3000/user   -H "Content-Type: application/json"   -d '{
@@ -27,7 +28,7 @@ curl -X POST http://localhost:3000/disk-pack   -H "Content-Type: application/jso
     "hourlyPrice": 3.3
   }'
 
+1. Instant Apps
 2. User [Signup, login, logout]
-4. Subscription
 5. Instance Usage
-6. Invoice
+6. Invoice line item

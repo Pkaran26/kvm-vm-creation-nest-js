@@ -9,6 +9,7 @@ import { CpuPackService } from 'src/instance-pack/cpu-pack/cpu-pack.service';
 import { DiskPackService } from 'src/instance-pack/disk-pack/disk-pack.service';
 import { WorkflowClient } from '@temporalio/client';
 import { osDownloadMap } from 'src/os-mapping';
+import { SshKeyService } from 'src/ssh-key/ssh-key.service';
 
 @Injectable()
 export class InstanceService {
@@ -18,9 +19,19 @@ export class InstanceService {
     private cpuPackService: CpuPackService,
     private diskPackService: DiskPackService,
     private readonly temporalClient: WorkflowClient,
+    private sshKeyService: SshKeyService,
   ) {}
 
   async createInstance(body: CreateInstanceRequest) {
+    const userId = 1;
+    // const sshKeys = await this.sshKeyService.getSSHKeyByName(userId, body.ssh);
+    // if (!sshKeys || sshKeys.length == 0) {
+    //   return {
+    //     status: false,
+    //     instanceName: '',
+    //     message: 'SSH key not found!',
+    //   };
+    // }
     const SELECTED_OS =
       osDownloadMap[body.isoImageName as keyof typeof osDownloadMap];
     if (!SELECTED_OS)
@@ -46,17 +57,26 @@ export class InstanceService {
       };
     }
     const handle = await this.temporalClient.start('createInstanceWorkflow', {
-      args: [{ ...body, cpuPack, diskPack, SELECTED_OS }],
-      taskQueue: 'create-instance-queue',
+      args: [
+        {
+          ...body,
+          cpuPack,
+          diskPack,
+          SELECTED_OS,
+          ssh: 'sshKeys[0].privateKey',
+        },
+      ],
+      taskQueue: 'instance-queue',
       workflowId: `instance-${body.instanceName}-${Date.now()}`,
     });
-    const { status, instanceName, message } = await handle.result();
+    const { status, instanceName, message, error } = await handle.result();
+    console.log('error ************** ', error);
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     const instance = status ? await this.getInstanceDetail(instanceName) : null;
     const subscription = status
       ? await this.subscriptionService.createSubscription({
           name: 'Instance Subscription',
-          userId: 1,
+          userId: userId,
           totalAmount: cpuPack.monthlyPrice + diskPack.monthlyPrice,
           status: 'active',
           metaData: JSON.stringify({

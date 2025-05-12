@@ -4,11 +4,14 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  JoinColumn,
+  OneToMany,
 } from 'typeorm';
 import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { User } from 'src/user/user.entity';
 
 @Entity()
-export class CPUPack {
+export class SSHKey {
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -19,23 +22,25 @@ export class CPUPack {
 
   @Column()
   @IsNotEmpty()
-  @IsNumber()
-  cpu: number;
+  @IsString()
+  privateKey: string;
 
   @Column()
   @IsNotEmpty()
-  @IsNumber()
-  ram: number;
+  @IsString()
+  publicKey: string;
 
-  @Column()
+  @OneToMany(() => User, (user) => user, {
+    cascade: false,
+    eager: false,
+  })
+  @JoinColumn({ name: 'userId' })
+  user: User;
+
+  @Column({ name: 'userId' })
   @IsNotEmpty()
   @IsNumber()
-  monthlyPrice: number;
-
-  @Column()
-  @IsNotEmpty()
-  @IsNumber()
-  hourlyPrice: number;
+  userId: number;
 
   @CreateDateColumn()
   createdAt: Date;

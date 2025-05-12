@@ -1,17 +1,31 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get, Param, ParseIntPipe, Post } from '@nestjs/common';
 import { SshKeyService } from './ssh-key.service';
+import { SSHKeyResponse } from './ssh-key.dto';
 
 @Controller('ssh-key')
 export class SshKeyController {
   constructor(private sshKeyService: SshKeyService) {}
 
-  @Get(':name')
-  generateSSHKey(@Param() param: { name: string }) {
-    return this.sshKeyService.generateSSHKey(param.name);
+  @Post(':name')
+  async generateSSHKey(@Param() param: { name: string }) {
+    const sshKey: SSHKeyResponse = await this.sshKeyService.generateSSHKey(
+      param.name,
+    );
+    if (sshKey.status) {
+      await this.sshKeyService.createSSHKey({
+        name: param.name,
+        privateKey: sshKey.privateKey,
+        publicKey: sshKey.publicKey,
+      });
+    }
+    return {
+      status: true,
+      publicKey: sshKey.publicKey,
+    };
   }
 
-  @Get()
-  listSSHKey() {
-    return this.sshKeyService.listSSHKey();
+  @Get(':userId')
+  listSSHKey(@Param('userId', ParseIntPipe) userId: number) {
+    return this.sshKeyService.getAllSSHKey(userId);
   }
 }

@@ -8,7 +8,12 @@ const execAsync = promisify(exec);
 
 export async function createInstance(
   body: CreateInstanceRequestActivity,
-): Promise<{ status: boolean; instanceName: string; message: string }> {
+): Promise<{
+  status: boolean;
+  instanceName: string;
+  message: string;
+  error?: unknown;
+}> {
   const VM_NAME = body.instanceName + '-' + Math.random().toString();
   const OS_IMAGE_URL = body.SELECTED_OS.url;
   const DOWNLOAD_DIR = './vm_images';
@@ -23,6 +28,7 @@ export async function createInstance(
   const SSH_PUBLIC_KEY = body.ssh;
   const USERNAME = body.SELECTED_OS.username;
   const HOSTNAME = VM_NAME;
+  const instantApps = body.instantApps;
 
   // Paths
   const baseImagePath = join(DOWNLOAD_DIR, BASE_IMAGE_NAME);
@@ -66,7 +72,7 @@ export async function createInstance(
       { timeout: 600000 },
     );
     console.log('[INFO] Preparing cloud-init data...');
-    const userDataContent = `\
+    let userDataContent = `\
 #cloud-config
 users:
   - name: ${USERNAME}
@@ -80,15 +86,32 @@ users:
 hostname: ${HOSTNAME}
 manage_etc_hosts: true
 # Optional: Update packages on first boot
-# package_update: true
-# package_upgrade: true
+package_update: true
+package_upgrade: true
 # packages:
 #  - qemu-guest-agent
-# runcmd:
+runcmd:
 #  - [ systemctl, enable, qemu-guest-agent.service ]
 #  - [ systemctl, start, --no-block, qemu-guest-agent.service ]
 `;
+
+    if (instantApps && instantApps.length > 0) {
+      instantApps.map((e) => {
+        if (e && body.SELECTED_OS.installCommands[e]) {
+          body.SELECTED_OS.installCommands[e].map((c) => {
+            userDataContent += `\n  - [ ${c} ]`;
+          });
+        }
+      });
+    }
+
     writeFileSync(userDataPath, userDataContent);
+
+    return {
+      status: false,
+      instanceName: VM_NAME,
+      message: userDataContent,
+    };
 
     const metaDataContent = `\
 instance-id: ${VM_NAME}-instance-01
@@ -154,6 +177,8 @@ local-hostname: ${HOSTNAME}
       status: false,
       instanceName: VM_NAME,
       message: 'Instance creation failed',
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      error: error,
     };
   }
 }

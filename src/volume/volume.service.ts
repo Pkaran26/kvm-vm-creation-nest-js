@@ -1,31 +1,64 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Injectable } from '@nestjs/common';
 import { HelperService } from 'src/helper/helper.service';
-import { AttachVolume, CreateVolume } from './volume.interface';
+import { AttachVolume, CreateVolumeActivity } from './volume.interface';
+import { WorkflowClient } from '@temporalio/client';
+import { SubscriptionService } from 'src/subscription/subscription.service';
+import { DiskPackService } from 'src/instance-pack/disk-pack/disk-pack.service';
 
 @Injectable()
 export class VolumeService {
-  constructor(private helperService: HelperService) {}
+  constructor(
+    private helperService: HelperService,
+    private readonly temporalClient: WorkflowClient,
+    private subscriptionService: SubscriptionService,
+    private diskPackService: DiskPackService,
+  ) {}
 
-  async createVolume(payload: CreateVolume) {
-    const { name, storagePool, capacity } = payload;
-    try {
-      const output = (await this.helperService.executeCommand(
-        `virsh vol-create-as --pool ${storagePool} --name ${name} --capacity ${capacity}G --format qcow2`,
-      )) as string;
-
-      // const list = this.helperService.parseCMDResponse(output);
+  async createVolume(payload: CreateVolumeActivity) {
+    const userId = 1;
+    const diskPack = await this.diskPackService.getDiskPackById(
+      payload.diskPackId,
+    );
+    if (!diskPack) {
       return {
-        status: true,
-        detail: output,
-      };
-    } catch (error) {
-      return {
-        status: true,
-        error: 'Failed to create volume',
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        details: error,
+        status: false,
+        message: 'Disk pack not found',
       };
     }
+    const handle = await this.temporalClient.start('createVolumeWorkflow', {
+      args: [{ ...payload, capacity: diskPack.diskSize }],
+      taskQueue: 'volume-queue',
+      workflowId: `volume-${payload.name}-${Date.now()}`,
+    });
+    const { status, error, detail } = await handle.result();
+    if (error) {
+      return {
+        status,
+        message: error,
+        detail,
+      };
+    }
+    const subscription = status
+      ? await this.subscriptionService.createSubscription({
+          name: 'Volume Subscription',
+          userId: userId,
+          totalAmount: diskPack.monthlyPrice,
+          status: 'active',
+          metaData: JSON.stringify({
+            volName: payload.name,
+            diskPack: diskPack,
+          }),
+        })
+      : null;
+
+    return {
+      status: status,
+      volName: payload.name,
+      workflowId: `volume-${payload.name}-${Date.now()}`,
+      message: 'Volume created',
+      subscription,
+    };
   }
 
   async attachVolumeToInstance(payload: AttachVolume) {

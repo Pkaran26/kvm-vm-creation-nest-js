@@ -5,6 +5,7 @@ export interface CreateInstanceRequest {
   ssh: string;
   cpuPackId: number;
   diskPackId: number;
+  instantApps?: string[];
 }
 
 export interface CreateInstanceRequestActivity extends CreateInstanceRequest {
@@ -26,5 +27,8 @@ export interface CreateInstanceRequestActivity extends CreateInstanceRequest {
     username: string;
     filename: string;
     variant: string;
+    installCommands: {
+      [key: string]: string[];
+    };
   };
 }
