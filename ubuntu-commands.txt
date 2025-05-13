@@ -5,3 +5,7 @@ sudo apt install genisoimage
 sudo chmod o+x /home/prateek
 
 sudo virt-install --osinfo list
+
+temporal server start-dev
+yarn start --watch
+yarn start:temporal --watch

@@ -1,5 +1,5 @@
 curl -X POST http://localhost:3000/instance   -H "Content-Type: application/json"   -d '{
-    "instanceName": "ubuntu-22-13",
+    "instanceName": "ubuntu-22-subs20",
     "isoImageName": "ubuntu22",
     "network": "myfreenetwork",    
     "ssh": "test",
@@ -32,3 +32,9 @@ curl -X POST http://localhost:3000/disk-pack   -H "Content-Type: application/jso
 2. User [Signup, login, logout]
 5. Instance Usage
 6. Invoice line item
+
+Testing remaining :-
+1. Instant Apps
+2. Vol Subscription
+3. SSh keys
+4. SSh keys selection with VM creation

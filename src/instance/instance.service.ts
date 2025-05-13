@@ -69,8 +69,7 @@ export class InstanceService {
       taskQueue: 'instance-queue',
       workflowId: `instance-${body.instanceName}-${Date.now()}`,
     });
-    const { status, instanceName, message, error } = await handle.result();
-    console.log('error ************** ', error);
+    const { status, instanceName, message } = await handle.result();
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     const instance = status ? await this.getInstanceDetail(instanceName) : null;
     const subscription = status

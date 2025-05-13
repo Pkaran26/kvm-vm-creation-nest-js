@@ -107,12 +107,6 @@ runcmd:
 
     writeFileSync(userDataPath, userDataContent);
 
-    return {
-      status: false,
-      instanceName: VM_NAME,
-      message: userDataContent,
-    };
-
     const metaDataContent = `\
 instance-id: ${VM_NAME}-instance-01
 local-hostname: ${HOSTNAME}
@@ -167,7 +161,7 @@ local-hostname: ${HOSTNAME}
         --noautoconsole`;
     await execAsync(virtInstallCommand, { timeout: 600000 });
     return {
-      status: false,
+      status: true,
       instanceName: VM_NAME,
       message: 'Instance created successfully',
     };
