@@ -24,14 +24,14 @@ export class InstanceService {
 
   async createInstance(body: CreateInstanceRequest) {
     const userId = 1;
-    // const sshKeys = await this.sshKeyService.getSSHKeyByName(userId, body.ssh);
-    // if (!sshKeys || sshKeys.length == 0) {
-    //   return {
-    //     status: false,
-    //     instanceName: '',
-    //     message: 'SSH key not found!',
-    //   };
-    // }
+    const sshKeys = await this.sshKeyService.getSSHKeyByName(userId, body.ssh);
+    if (!sshKeys || sshKeys.length == 0) {
+      return {
+        status: false,
+        instanceName: '',
+        message: 'SSH key not found!',
+      };
+    }
     const SELECTED_OS =
       osDownloadMap[body.isoImageName as keyof typeof osDownloadMap];
     if (!SELECTED_OS)
