@@ -1,7 +1,11 @@
+export interface CreateStoragePool {
+  name: string;
+  path: string;
+}
+
 export interface CreateVolume {
   name: string;
   storagePool: string;
-  capacity: number;
   diskPackId: number;
 }
 
@@ -9,7 +13,6 @@ export interface CreateVolumeActivity {
   name: string;
   storagePool: string;
   capacity: number;
-  diskPackId: number;
 }
 
 export interface AttachVolume {

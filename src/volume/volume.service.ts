@@ -1,7 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Injectable } from '@nestjs/common';
 import { HelperService } from 'src/helper/helper.service';
-import { AttachVolume, CreateVolumeActivity } from './volume.interface';
+import {
+  AttachVolume,
+  CreateStoragePool,
+  CreateVolume,
+} from './volume.interface';
 import { WorkflowClient } from '@temporalio/client';
 import { SubscriptionService } from 'src/subscription/subscription.service';
 import { DiskPackService } from 'src/instance-pack/disk-pack/disk-pack.service';
@@ -15,7 +19,41 @@ export class VolumeService {
     private diskPackService: DiskPackService,
   ) {}
 
-  async createVolume(payload: CreateVolumeActivity) {
+  async createStoragePool(payload: CreateStoragePool) {
+    try {
+      const output = (await this.helperService.executeCommand(
+        `virsh pool-define-as --name ${payload.name} --type dir --target ${payload.path}`,
+      )) as string;
+      const list = this.helperService.parseCMDResponse(output);
+      return { status: true, instances: list };
+    } catch (error) {
+      return {
+        status: true,
+        instances: [],
+        error: 'Failed to list storage pool',
+        details: error,
+      };
+    }
+  }
+
+  async getStoragePoolList() {
+    try {
+      const output = (await this.helperService.executeCommand(
+        'virsh pool-list --all',
+      )) as string;
+      const list = this.helperService.parseCMDResponse(output);
+      return { status: true, instances: list };
+    } catch (error) {
+      return {
+        status: true,
+        instances: [],
+        error: 'Failed to list storage pool',
+        details: error,
+      };
+    }
+  }
+
+  async createVolume(payload: CreateVolume) {
     const userId = 1;
     const diskPack = await this.diskPackService.getDiskPackById(
       payload.diskPackId,

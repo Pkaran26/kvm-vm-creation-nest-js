@@ -107,7 +107,6 @@ export class InstanceService {
         status: true,
         instances: [],
         error: 'Failed to list VMs',
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         details: error,
       };
     }

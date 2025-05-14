@@ -28,6 +28,14 @@ curl -X POST http://localhost:3000/disk-pack   -H "Content-Type: application/jso
     "hourlyPrice": 3.3
   }'
 
+curl -X POST http://localhost:3000/volume   -H "Content-Type: application/json"   -d '{
+    "name": "data-disk",
+    "storagePool": "vm_images-2",
+    "capacity": 5,    
+    "diskPackId": 1
+  }'
+
+
 1. Instant Apps
 2. User [Signup, login, logout]
 5. Instance Usage
