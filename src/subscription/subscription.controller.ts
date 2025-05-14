@@ -5,11 +5,13 @@ import {
   NotFoundException,
   Param,
   ParseIntPipe,
+  UseGuards,
   // Post,
 } from '@nestjs/common';
 import { SubscriptionService } from './subscription.service';
 // import { CreateSubscriptionDto } from './subscription.dto';
 import { Subscription } from './subscription.entity';
+import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
 
 @Controller('subscription')
 export class SubscriptionController {
@@ -22,11 +24,13 @@ export class SubscriptionController {
   //   return this.subscriptionService.createSubscription(createSubscriptionDto);
   // }
 
+  @UseGuards(JwtAuthGuard)
   @Get()
   async getAllSubscriptions(): Promise<Subscription[]> {
     return this.subscriptionService.getAllSubscriptions();
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get(':id')
   async getSubscriptionById(
     @Param('id', ParseIntPipe) id: number,

@@ -10,6 +10,7 @@ import { DiskPackService } from 'src/instance-pack/disk-pack/disk-pack.service';
 import { WorkflowClient } from '@temporalio/client';
 import { osDownloadMap } from 'src/os-mapping';
 import { SshKeyService } from 'src/ssh-key/ssh-key.service';
+import { User } from 'src/user/user.entity';
 
 @Injectable()
 export class InstanceService {
@@ -22,9 +23,11 @@ export class InstanceService {
     private sshKeyService: SshKeyService,
   ) {}
 
-  async createInstance(body: CreateInstanceRequest) {
-    const userId = 1;
-    const sshKeys = await this.sshKeyService.getSSHKeyByName(userId, body.ssh);
+  async createInstance(body: CreateInstanceRequest, currentUser: User) {
+    const sshKeys = await this.sshKeyService.getSSHKeyByName(
+      currentUser.id,
+      body.ssh,
+    );
     if (!sshKeys || sshKeys.length == 0) {
       return {
         status: false,
@@ -75,7 +78,7 @@ export class InstanceService {
     const subscription = status
       ? await this.subscriptionService.createSubscription({
           name: 'Instance Subscription',
-          userId: userId,
+          userId: currentUser.id,
           totalAmount: cpuPack.monthlyPrice + diskPack.monthlyPrice,
           status: 'active',
           metaData: JSON.stringify({

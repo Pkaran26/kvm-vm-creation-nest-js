@@ -15,12 +15,27 @@ export class User {
   @Column()
   @IsNotEmpty()
   @IsString()
-  name: string;
+  username: string;
+
+  @Column()
+  @IsNotEmpty()
+  @IsString()
+  fname: string;
+
+  @Column()
+  @IsNotEmpty()
+  @IsString()
+  lname: string;
 
   @Column({ unique: true })
   @IsNotEmpty()
   @IsEmail()
   email: string;
+
+  @Column()
+  @IsNotEmpty()
+  @IsString()
+  password: string;
 
   @CreateDateColumn()
   createdAt: Date;

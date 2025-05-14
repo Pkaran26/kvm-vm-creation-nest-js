@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './user.entity';
+import * as bcrypt from 'bcrypt';
+import { CreateUserDto } from './user.dto';
 
 @Injectable()
 export class UserService {
@@ -10,9 +12,26 @@ export class UserService {
     private readonly userRepository: Repository<User>,
   ) {}
 
-  // Create a new user
-  async createUser(userData: Partial<User>): Promise<User> {
-    const user = this.userRepository.create(userData);
+  async findOne(username: string): Promise<User | null> {
+    return await this.userRepository.findOne({
+      where: {
+        username: username,
+      },
+    });
+  }
+
+  async createUser(payload: CreateUserDto): Promise<User> {
+    const existingUser = await this.findOne(payload.username);
+    if (existingUser) {
+      console.log(`User ${payload.username} already exists`);
+      return existingUser;
+    }
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+    const hashedPassword = (await bcrypt.hash(payload.password, 10)) as string;
+    const user = this.userRepository.create({
+      ...payload,
+      password: hashedPassword,
+    });
     return this.userRepository.save(user);
   }
 

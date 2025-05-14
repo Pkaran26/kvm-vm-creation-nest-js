@@ -9,6 +9,7 @@ import {
 import { WorkflowClient } from '@temporalio/client';
 import { SubscriptionService } from 'src/subscription/subscription.service';
 import { DiskPackService } from 'src/instance-pack/disk-pack/disk-pack.service';
+import { User } from 'src/user/user.entity';
 
 @Injectable()
 export class VolumeService {
@@ -53,8 +54,7 @@ export class VolumeService {
     }
   }
 
-  async createVolume(payload: CreateVolume) {
-    const userId = 1;
+  async createVolume(payload: CreateVolume, currentUser: User) {
     const diskPack = await this.diskPackService.getDiskPackById(
       payload.diskPackId,
     );
@@ -80,7 +80,7 @@ export class VolumeService {
     const subscription = status
       ? await this.subscriptionService.createSubscription({
           name: 'Volume Subscription',
-          userId: userId,
+          userId: currentUser.id,
           totalAmount: diskPack.monthlyPrice,
           status: 'active',
           metaData: JSON.stringify({

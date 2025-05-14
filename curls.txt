@@ -38,10 +38,7 @@ curl -X POST http://localhost:3000/volume   -H "Content-Type: application/json" 
 curl -X POST http://localhost:3000/ssh-key/myprivatekey
 
 1. Instant Apps
+2. Invoice line item
 2. User [Signup, login, logout]
 5. Instance Usage
-6. Invoice line item
 
-Testing remaining :-
-1. Call service under activity
-2. Instant Apps

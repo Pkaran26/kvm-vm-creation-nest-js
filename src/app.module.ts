@@ -15,9 +15,12 @@ import { StoragePoolModule } from './storage-pool/storage-pool.module';
 import { HelperService } from './helper/helper.service';
 import { InvoiceModule } from './invoice/invoice.module';
 import { TemporalModule } from './temporal/temporal.module';
+import { AuthModule } from './auth/auth.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({ isGlobal: true }), // Loads .env file and makes config global
     TypeOrmModule.forRoot({
       type: 'sqlite',
       database: 'clouddb.db',
@@ -35,6 +38,7 @@ import { TemporalModule } from './temporal/temporal.module';
     StoragePoolModule,
     InvoiceModule,
     TemporalModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService, StoragePoolService, HelperService],
