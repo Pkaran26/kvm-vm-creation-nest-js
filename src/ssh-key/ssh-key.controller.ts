@@ -13,6 +13,7 @@ export class SshKeyController {
     );
     if (sshKey.status) {
       await this.sshKeyService.createSSHKey({
+        userId: 1,
         name: param.name,
         privateKey: sshKey.privateKey,
         publicKey: sshKey.publicKey,

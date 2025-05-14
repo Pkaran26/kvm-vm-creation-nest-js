@@ -1,8 +1,8 @@
 curl -X POST http://localhost:3000/instance   -H "Content-Type: application/json"   -d '{
-    "instanceName": "ubuntu-22-subs20",
+    "instanceName": "ubuntu-22-subs40",
     "isoImageName": "ubuntu22",
     "network": "myfreenetwork",    
-    "ssh": "test",
+    "ssh": "myprivatekey",
     "cpuPackId": 1,
     "diskPackId": 1,
     "instantApps": ["nginx", "mysql"]
@@ -35,6 +35,7 @@ curl -X POST http://localhost:3000/volume   -H "Content-Type: application/json" 
     "diskPackId": 1
   }'
 
+curl -X POST http://localhost:3000/ssh-key/myprivatekey
 
 1. Instant Apps
 2. User [Signup, login, logout]
@@ -42,7 +43,5 @@ curl -X POST http://localhost:3000/volume   -H "Content-Type: application/json" 
 6. Invoice line item
 
 Testing remaining :-
-1. Instant Apps
-2. Vol Subscription
-3. SSh keys
-4. SSh keys selection with VM creation
+1. Call service under activity
+2. Instant Apps

@@ -63,7 +63,7 @@ export class InstanceService {
           cpuPack,
           diskPack,
           SELECTED_OS,
-          ssh: 'sshKeys[0].privateKey',
+          ssh: sshKeys[0].publicKey,
         },
       ],
       taskQueue: 'instance-queue',
