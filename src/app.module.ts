@@ -13,7 +13,7 @@ import { VolumeModule } from './volume/volume.module';
 import { StoragePoolService } from './storage-pool/storage-pool.service';
 import { StoragePoolModule } from './storage-pool/storage-pool.module';
 import { HelperService } from './helper/helper.service';
-import { InvoiceModule } from './invoice/invoice.module';
+//import { InvoiceModule } from './invoice/invoice.module';
 
 @Module({
   imports: [
@@ -32,7 +32,7 @@ import { InvoiceModule } from './invoice/invoice.module';
     SshKeyModule,
     VolumeModule,
     StoragePoolModule,
-    InvoiceModule,
+//    InvoiceModule,
   ],
   controllers: [AppController],
   providers: [AppService, StoragePoolService, HelperService],
